@@ -12,7 +12,17 @@ if (!isset($_SESSION['bpmsaid']) || strlen($_SESSION['bpmsaid']) == 0) {
 }
 
 $fullname = $_SESSION['fullname'];
-$uid = $_SESSION['bpmsaid'];
+$uid = (int) $_SESSION['bpmsaid'];
+
+// Recommend services from the logged-in user's accepted booking history.
+$personalizedServices = mysqli_query($con, "SELECT s.*, COUNT(a.ID) AS booking_count
+    FROM tblappointment a
+    INNER JOIN services s ON s.id = a.ServiceId
+    WHERE a.UserID = $uid AND a.Status = 'Accepted' AND a.ServiceId IS NOT NULL
+    GROUP BY s.id, s.service_name, s.service_desc, s.cost, s.image, s.creation_date
+    ORDER BY booking_count DESC, MAX(a.BookingDate) DESC
+    LIMIT 3");
+$hasPersonalizedServices = $personalizedServices && mysqli_num_rows($personalizedServices) > 0;
 
 // --- APPOINTMENT REMINDER LOGIC ---
 date_default_timezone_set('Asia/Kathmandu'); // Set to Nepal timezone
@@ -54,6 +64,7 @@ if ($query) {
   <title>Beauty Parlour | User Dashboard</title>
 
   <link rel="stylesheet" href="style1.css">
+  <link rel="stylesheet" href="recommendations.css?v=1">
   <link rel="stylesheet" href="include/header.css">
   <link rel="stylesheet" href="include/footer.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
@@ -156,6 +167,32 @@ if ($query) {
       </div>
     </div>
   </div>
+
+  <?php if ($hasPersonalizedServices): ?>
+  <section class="dashboard-recommendations recommendation-section">
+    <div class="recommendation-heading">
+      <span class="section-kicker">Personalised for you</span>
+      <h1>Your Top Services</h1>
+      <p>Your three most frequently booked services.</p>
+    </div>
+    <div class="recommendation-grid">
+      <?php if ($personalizedServices): while ($service = mysqli_fetch_assoc($personalizedServices)): ?>
+        <article class="recommendation-card">
+          <a class="recommendation-image-link" href="get-appointment.php?serviceid=<?php echo (int) $service['id']; ?>" aria-label="Book <?php echo htmlspecialchars($service['service_name']); ?>">
+            <img src="../admin/images/<?php echo htmlspecialchars($service['image']); ?>" alt="<?php echo htmlspecialchars($service['service_name']); ?>">
+          </a>
+          <div class="recommendation-card-content">
+            <h2><?php echo htmlspecialchars($service['service_name']); ?></h2>
+            <p><?php echo htmlspecialchars($service['service_desc']); ?></p>
+            <p class="recommendation-price">Rs. <?php echo number_format((float) $service['cost']); ?></p>
+            <?php if ($hasPersonalizedServices): ?><span class="visit-count">Booked <?php echo (int) $service['booking_count']; ?> time<?php echo (int) $service['booking_count'] === 1 ? '' : 's'; ?></span><?php endif; ?>
+            <a href="get-appointment.php?serviceid=<?php echo (int) $service['id']; ?>" class="btn">Book Again</a>
+          </div>
+        </article>
+      <?php endwhile; endif; ?>
+    </div>
+  </section>
+  <?php endif; ?>
 
   <section class="parlour">
     <h1>Our Salon Premium Services</h1>

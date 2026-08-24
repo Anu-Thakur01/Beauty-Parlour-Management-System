@@ -1,0 +1,156 @@
+.dashboard-recommendations {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 64px 8%;
+  background: linear-gradient(135deg, #fff8f6 0%, #fdf0ec 100%);
+}
+
+.dashboard-recommendations .recommendation-heading {
+  max-width: 1180px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+
+.dashboard-recommendations .section-kicker {
+  display: inline-block;
+  margin-bottom: 9px;
+  color: #b2533e;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.dashboard-recommendations .recommendation-heading h1 {
+  margin: 0;
+  color: #2d2422;
+  font-family: Georgia, serif;
+  font-size: clamp(28px, 3vw, 38px);
+}
+
+.dashboard-recommendations .recommendation-heading p {
+  margin: 10px 0 0;
+  color: #776965;
+  font-size: 16px;
+}
+
+.dashboard-recommendations .recommendation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.dashboard-recommendations .recommendation-card {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #f0dfd9;
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(81, 46, 36, 0.09);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.dashboard-recommendations .recommendation-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(81, 46, 36, 0.15);
+}
+
+.dashboard-recommendations .recommendation-image-link {
+  display: block;
+  overflow: hidden;
+  background: #ead7d0;
+}
+
+.dashboard-recommendations .recommendation-card img {
+  display: block;
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  transition: transform 250ms ease, filter 250ms ease;
+}
+
+.dashboard-recommendations .recommendation-image-link:hover img,
+.dashboard-recommendations .recommendation-image-link:focus-visible img,
+.dashboard-recommendations .recommendation-image-link:active img {
+  transform: scale(1.08);
+  filter: brightness(0.82);
+}
+
+.dashboard-recommendations .recommendation-image-link:focus-visible {
+  outline: 3px solid #b2533e;
+  outline-offset: -3px;
+}
+
+.dashboard-recommendations .recommendation-card-content {
+  padding: 20px 20px 22px;
+}
+
+.dashboard-recommendations .recommendation-card h2 {
+  overflow: hidden;
+  margin: 0 0 9px;
+  color: #302422;
+  font-size: 21px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-recommendations .recommendation-card-content > p:not(.recommendation-price) {
+  display: -webkit-box;
+  overflow: hidden;
+  min-height: 43px;
+  margin: 0 0 14px;
+  color: #746662;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.dashboard-recommendations .recommendation-price {
+  margin: 0 0 14px;
+  color: #b2533e;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.dashboard-recommendations .visit-count {
+  display: inline-block;
+  margin: -2px 0 15px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: #f9e6df;
+  color: #9b4431;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dashboard-recommendations .btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #b2533e;
+  font-size: 14px;
+}
+
+.dashboard-recommendations .btn:hover {
+  background: #8f3c2b;
+}
+
+/* Keep the existing premium-services section visually connected to this one. */
+.dashboard-recommendations + .parlour {
+  padding-top: 42px;
+}
+
+@media (max-width: 800px) {
+  .dashboard-recommendations {
+    padding: 46px 22px;
+  }
+
+  .dashboard-recommendations .recommendation-grid {
+    grid-template-columns: 1fr;
+    max-width: 440px;
+  }
+}
