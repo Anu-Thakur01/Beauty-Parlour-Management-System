@@ -1,0 +1,35 @@
+body { margin: 0; background: #f1f2f7; color: #303846; font-family: Arial, sans-serif; }
+.payment-page { min-height: 65vh; padding: 56px 22px 74px; }
+.payment-card { max-width: 900px; margin: 0 auto; padding: 0; background: transparent; }
+.back-link { display: inline-block; margin-bottom: 18px; color: #657080; text-decoration: none; font-weight: bold; }
+.payment-kicker { margin: 0 0 7px; color: #7d8794; font-size: 12px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+.payment-card h1 { margin: 0 0 20px; font-size: 29px; font-weight: 500; }
+.payment-total { display: flex; justify-content: space-between; align-items: center; max-width: 720px; margin-bottom: 24px; padding: 16px 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 14px rgba(55, 65, 81, .06); font-size: 15px; }
+.payment-total strong { color: #c1533b; font-size: 20px; }
+.payment-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; max-width: 720px; }
+.payment-option { min-height: 190px; padding: 28px 16px 22px; border: 2px solid #e4e8f0; border-radius: 16px; background: #fff; color: #677284; text-align: center; cursor: pointer; box-shadow: 0 5px 15px rgba(55, 65, 81, .06); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+.payment-option:hover { position: relative; z-index: 1; border-color: #9aa8bb; background: #fff; box-shadow: 0 13px 25px rgba(55, 65, 81, .16); transform: translateY(-7px); }
+.payment-option:active { transform: translateY(-2px) scale(.98); }
+.payment-option.is-selected { border-color: #d69a29; background: linear-gradient(180deg, #fffdf7 0%, #fff7e4 100%); box-shadow: 0 10px 24px rgba(185, 119, 31, .18); }
+.payment-option.is-selected::after { display: block; margin-top: 12px; color: #a66b15; content: 'Selected'; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; }
+.payment-icon { display: flex; align-items: center; justify-content: center; height: 64px; margin-bottom: 17px; transition: transform .25s ease; }
+.payment-option:hover .payment-icon { transform: scale(1.1) rotate(-2deg); }
+.payment-option-title { display: block; margin-bottom: 6px; color: #303846; font-size: 16px; font-weight: 700; }
+.payment-option-subtitle { display: block; color: #7d8899; font-size: 14px; }
+.payment-brand img { display: block; width: 62px; height: 62px; object-fit: contain; }
+.khalti-brand { position: relative; gap: 0; width: 116px; color: #63349a; font-family: Arial, sans-serif; }
+.khalti-mark { position: relative; z-index: 1; display: grid; width: 51px; height: 51px; place-items: center; clip-path: polygon(10% 0, 95% 0, 88% 76%, 50% 100%, 13% 76%); background: #63349a; color: #fff; font-size: 36px; font-weight: 800; line-height: 1; }
+.khalti-mark::before { position: absolute; left: -14px; width: 7px; height: 29px; background: #f7a31b; content: ''; }
+.khalti-name { margin-left: -4px; padding: 8px 9px 8px 12px; border: 3px solid #63349a; border-radius: 0 12px 12px 0; background: #fff; color: #63349a; font-size: 18px; font-weight: 500; letter-spacing: -.7px; }
+.cash-icon { position: relative; }
+.cash-icon i { position: absolute; width: 35px; height: 23px; border-radius: 3px; background: #34a4e8; }
+.cash-icon i:first-child { transform: translate(-5px, -5px); background: #61c3f5; }
+.cash-icon i:last-child::after { position: absolute; top: 7px; left: 13px; width: 9px; height: 9px; border-radius: 50%; background: #fff; content: ''; }
+.cash-option { border-top: 4px solid #3aa7e9; }
+.online-option { border-top: 4px solid #8363bd; }
+.esewa-option:hover { border-color: #61bd49; }
+.khalti-option:hover { border-color: #63349a; }
+.payment-message, .payment-success, .payment-note { max-width: 690px; margin: 0 0 20px; padding: 15px 18px; border-radius: 12px; box-shadow: 0 4px 13px rgba(55, 65, 81, .05); line-height: 1.5; }
+.payment-message, .payment-note { background: #fff3d9; color: #765222; }
+.payment-success { background: #e7f7ee; color: #246b42; }
+@media (max-width: 700px) { .payment-page { padding: 34px 16px; } .payment-options { grid-template-columns: 1fr; max-width: 380px; } .payment-option { min-height: 155px; } .payment-card h1 { font-size: 27px; } }

@@ -7,10 +7,9 @@ include('includes/dbconnection.php');
 // 1. REAL-TIME AJAX VALIDATION (Background)
 if (isset($_POST['check_email'])) {
     $email = mysqli_real_escape_string($con, $_POST['email']);
-    $role = mysqli_real_escape_string($con, $_POST['role']);
     $password = $_POST['password']; // Get password to check instantly
     
-    $checkQuery = mysqli_query($con, "SELECT password FROM tblusers WHERE email='$email' AND role='$role'");
+    $checkQuery = mysqli_query($con, "SELECT password FROM tblusers WHERE email='$email'");
     $row = mysqli_fetch_array($checkQuery);
     
     if (!$row) {
@@ -27,27 +26,20 @@ if (isset($_POST['check_email'])) {
 if (isset($_POST['login'])) {
     $email = mysqli_real_escape_string($con, $_POST['email']);
     $password = $_POST['password']; 
-    $selectedRole = isset($_POST['role']) ? mysqli_real_escape_string($con, $_POST['role']) : ''; 
 
-    if (empty($selectedRole)) {
-        echo "<script>alert('Please select a role before logging in.');</script>";
-    } else {
-        // --- Admin Authorization Guard ---
-        if ($selectedRole == 'admin') {
-            $allowedAdmins = ['admin1@gmail.com', 'admin2@gmail.com']; 
-            if (!in_array($email, $allowedAdmins)) {
-                echo "<script>alert('Invalid Credentials! Please check your credentials and selected role.');</script>";
-                echo "<script>window.location.href='login.php'</script>";
+    // The role is taken from the account itself; users do not need to select it.
+    $query = mysqli_query($con, "SELECT * FROM tblusers WHERE email='$email'");
+    $row = mysqli_fetch_array($query);
+
+    // --- Password & Role Verification ---
+    if ($row && md5($password) == $row['password']) {
+        if ($row['role'] === 'admin') {
+            $allowedAdmins = ['admin1@gmail.com', 'admin2@gmail.com'];
+            if (!in_array($email, $allowedAdmins, true)) {
+                echo "<script>alert('Invalid credentials.'); window.location.href='login.php';</script>";
                 exit();
             }
         }
-
-        // --- Query Database ---
-        $query = mysqli_query($con, "SELECT * FROM tblusers WHERE email='$email' AND role='$selectedRole'");
-        $row = mysqli_fetch_array($query);
-
-        // --- Password & Role Verification ---
-        if ($row && md5($password) == $row['password']) {
             session_regenerate_id();
             $_SESSION['bpmsaid'] = $row['id']; 
             $_SESSION['uid'] = $row['id'];
@@ -65,9 +57,8 @@ if (isset($_POST['login'])) {
                 }
                 exit();
             }
-        } else {
-            echo "<script>alert('Invalid Credentials! Please check your credentials and selected role.');</script>";
-        }
+    } else {
+        echo "<script>alert('Invalid email or password.');</script>";
     }
 }
 ?>
@@ -104,7 +95,7 @@ if (isset($_POST['login'])) {
                 </span>
             
                 <span id="email-warn" style="color: #e74c3c; font-size: 12px; display: none; margin-top: 5px;">
-                    <i class="fa fa-exclamation-circle"></i> This email is not registered as a <span id="role-text">user</span>.
+                    <i class="fa fa-exclamation-circle"></i> This email is not registered.
                 </span>
             </div>
 
@@ -116,15 +107,6 @@ if (isset($_POST['login'])) {
                 <span id="pass-warn" style="color: #e74c3c; font-size: 12px; display: none; margin-top: 5px;">
                     <i class="fa fa-key"></i> The password is incorrect. Please check again.
                 </span>
-            </div>
-
-            <div class="role-based" style="margin-bottom: 20px;">
-                <label>Login As</label>
-                <select name="role" id="role" required onchange="checkEmailRealTime()">
-                    <option value="" disabled selected> Select a Role </option>
-                    <option value="user">User</option>
-                    <option value="admin">Administrator</option>
-                </select>
             </div>
 
             <div class="forgot-password-link">
@@ -171,14 +153,12 @@ function validateEmailFormat() {
 function checkEmailRealTime() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const role = document.getElementById('role').value;
     const dbWarn = document.getElementById('email-warn');
     const passWarn = document.getElementById('pass-warn');
     const formatWarn = document.getElementById('format-warn');
-    const roleText = document.getElementById('role-text');
 
     // Only run if inputs are provided and format is okay
-    if (email !== "" && role !== "" && formatWarn.style.display === "none") {
+    if (email !== "" && formatWarn.style.display === "none") {
         const xhr = new XMLHttpRequest();
         xhr.open("POST", "<?php echo $_SERVER['PHP_SELF']; ?>", true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -188,7 +168,6 @@ function checkEmailRealTime() {
                 const response = this.responseText.trim();
                 
                 if (response === "not_found") {
-                    roleText.innerText = (role === 'admin') ? 'administrator' : 'user';
                     dbWarn.style.display = "block";
                     passWarn.style.display = "none";
                 } else if (response === "wrong_password") {
@@ -203,7 +182,7 @@ function checkEmailRealTime() {
                 }
             }
         };
-        xhr.send("check_email=1&email=" + encodeURIComponent(email) + "&role=" + encodeURIComponent(role) + "&password=" + encodeURIComponent(password));
+        xhr.send("check_email=1&email=" + encodeURIComponent(email) + "&password=" + encodeURIComponent(password));
     } else {
         dbWarn.style.display = "none";
         passWarn.style.display = "none";

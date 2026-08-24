@@ -29,6 +29,20 @@ if(!$user) {
     echo "<h2 style='color:red; text-align:center; margin-top:50px;'>Access Denied: You do not have permission to view this invoice.</h2>";
     exit;
 }
+
+$paymentResult = mysqli_query($con, "SELECT provider, status FROM tblpayments WHERE UserID='$uid' AND BillingId='$invid' LIMIT 1");
+$payment = $paymentResult ? mysqli_fetch_assoc($paymentResult) : null;
+$paymentLabel = 'Awaiting payment';
+$paymentColor = '#b7791f';
+if ($payment && $payment['status'] === 'Completed') {
+    $paymentLabel = 'Paid';
+    $paymentColor = 'green';
+} elseif ($payment && $payment['provider'] === 'cash') {
+    $paymentLabel = 'Pay at Parlour';
+    $paymentColor = '#b7791f';
+} elseif ($payment && $payment['status'] === 'Pending') {
+    $paymentLabel = 'Payment pending';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -110,11 +124,6 @@ if(!$user) {
             <h2 class="invoice-title">Service Invoice</h2>
             <p style="color: #888;">#<?php echo $invid; ?></p>
         </div>
-        <div style="text-align: right;">
-            <a href="print-invoice.php?invoiceid=<?php echo $invid; ?>" target="_blank" class="btn-print">
-             Print Receipt
-            </a>
-        </div>
     </div>
 
     <div class="info-grid">
@@ -126,7 +135,7 @@ if(!$user) {
         <div style="text-align: right;">
             <h4 style="margin-bottom: 5px;">Billing Details</h4>
             <p><strong>Date:</strong> <?php echo date("d-M-Y H:i", strtotime($user['PostingDate'])); ?></p>
-            <p><strong>Status:</strong> <span style="color: green; font-weight: bold;">Paid</span></p>
+            <p><strong>Status:</strong> <span style="color: <?php echo $paymentColor; ?>; font-weight: bold;"><?php echo $paymentLabel; ?></span></p>
         </div>
     </div>
 
@@ -162,6 +171,9 @@ if(!$user) {
     </div>
     
     <div style="margin-top: 40px; text-align: center;">
+        <?php if (!$payment || $payment['status'] !== 'Completed'): ?>
+        <a href="payment.php?invoiceid=<?php echo urlencode($invid); ?>" class="btn-print" style="margin-right: 12px; background: #2a9d8f;">Choose Payment Method</a>
+        <?php endif; ?>
         <a href="invoice.php" style="color: #d4a373; text-decoration: none;">
             <i class="fas fa-arrow-left"></i> Back to History
         </a>
