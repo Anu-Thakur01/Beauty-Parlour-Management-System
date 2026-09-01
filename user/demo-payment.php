@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('include/dbconnection.php');
+include('include/payment-config.php');
 
 if (!isset($_SESSION['uid'])) {
     header('location:logout.php');
@@ -24,18 +25,98 @@ if (!$payment || $payment['provider'] !== $method) {
     exit;
 }
 
+$gatewayError = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $payment['status'] === 'Pending') {
-    $transactionId = 'DEMO-' . strtoupper($method) . '-' . date('YmdHis') . '-' . mt_rand(100, 999);
-    $complete = mysqli_prepare($con, "UPDATE tblpayments
-        SET status = 'Completed', gateway_transaction_id = ?, paid_at = NOW()
-        WHERE UserID = ? AND BillingId = ? AND provider = ? AND status = 'Pending'");
-    mysqli_stmt_bind_param($complete, 'siss', $transactionId, $uid, $invid, $method);
-    mysqli_stmt_execute($complete);
-    mysqli_stmt_close($complete);
-    header('location:view-invoice.php?invoiceid=' . urlencode($invid) . '&demo=success');
-    exit;
-}
+    $amount = (float) $payment['amount'];
+    $callbackUrl = payment_gateway_callback_url($method, $invid);
 
+    if ($method === 'khalti') {
+        $khaltiKey = get_env_value('KHALTI_SANDBOX_KEY', '');
+
+        if ($khaltiKey === '') {
+            $transactionId = 'SANDBOX-KHALTI-' . date('YmdHis') . '-' . mt_rand(100, 999);
+            $complete = mysqli_prepare($con, "UPDATE tblpayments
+                SET status = 'Completed', gateway_transaction_id = ?, paid_at = NOW()
+                WHERE UserID = ? AND BillingId = ? AND provider = ? AND status = 'Pending'");
+            mysqli_stmt_bind_param($complete, 'siss', $transactionId, $uid, $invid, $method);
+            mysqli_stmt_execute($complete);
+            mysqli_stmt_close($complete);
+            header('location:view-invoice.php?invoiceid=' . urlencode($invid) . '&demo=success');
+            exit;
+        }
+
+        $payload = [
+            'return_url' => $callbackUrl,
+            'website_url' => 'http://localhost/parlour',
+            'amount' => (int) round($amount * 100),
+            'purchase_order_id' => $invid,
+            'purchase_order_name' => 'Parlour Invoice ' . $invid,
+            'customer_info' => [
+                'name' => 'Parlour Customer',
+                'email' => 'customer@example.com',
+                'phone' => '9800000000',
+            ],
+            'merchant_extra' => [
+                'payment_reference' => $payment['payment_reference'],
+            ],
+        ];
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => 'https://dev.khalti.com/api/v2/epayment/initiate/',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Key ' . $khaltiKey,
+                'Content-Type: application/json',
+            ],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $result = json_decode($response, true);
+
+        if ($httpCode >= 200 && $httpCode < 300 && !empty($result['payment_url'])) {
+            header('Location: ' . $result['payment_url']);
+            exit;
+        }
+
+        $gatewayError = !empty($result['detail']) ? $result['detail'] : 'Khalti sandbox connection failed. Check your KHALTI_SANDBOX_KEY value.';
+    } elseif ($method === 'esewa') {
+        $merchantCode = get_env_value('ESEWA_SANDBOX_MERCHANT_CODE', 'EPAYTEST');
+
+        if ($merchantCode === '' || $merchantCode === 'EPAYTEST') {
+            $transactionId = 'SANDBOX-ESEWA-' . date('YmdHis') . '-' . mt_rand(100, 999);
+            $complete = mysqli_prepare($con, "UPDATE tblpayments
+                SET status = 'Completed', gateway_transaction_id = ?, paid_at = NOW()
+                WHERE UserID = ? AND BillingId = ? AND provider = ? AND status = 'Pending'");
+            mysqli_stmt_bind_param($complete, 'siss', $transactionId, $uid, $invid, $method);
+            mysqli_stmt_execute($complete);
+            mysqli_stmt_close($complete);
+            header('location:view-invoice.php?invoiceid=' . urlencode($invid) . '&demo=success');
+            exit;
+        }
+
+        $esewaForm = '<!DOCTYPE html><html><body>'
+            . '<form id="esewaForm" method="POST" action="https://uat.esewa.com.np/epay/main">'
+            . '<input type="hidden" name="amt" value="' . number_format((float) $amount, 2, '.', '') . '">' 
+            . '<input type="hidden" name="pdc" value="0">'
+            . '<input type="hidden" name="psc" value="0">'
+            . '<input type="hidden" name="txAmt" value="0">'
+            . '<input type="hidden" name="tAmt" value="' . number_format((float) $amount, 2, '.', '') . '">' 
+            . '<input type="hidden" name="pid" value="' . htmlspecialchars((string) $payment['payment_reference']) . '">' 
+            . '<input type="hidden" name="scd" value="' . htmlspecialchars($merchantCode) . '">' 
+            . '<input type="hidden" name="su" value="' . htmlspecialchars($callbackUrl) . '">' 
+            . '<input type="hidden" name="fu" value="' . htmlspecialchars($callbackUrl) . '">' 
+            . '</form><script>document.getElementById("esewaForm").submit();</script></body></html>';
+        echo $esewaForm;
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -57,6 +138,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $payment['status'] === 'Pending') {
             <span>Invoice #<?php echo htmlspecialchars($invid); ?></span>
             <strong>Rs. <?php echo number_format((float) $payment['amount'], 2); ?></strong>
         </div>
+
+        <?php if ($gatewayError !== ''): ?>
+            <div class="demo-message"><?php echo htmlspecialchars($gatewayError); ?></div>
+        <?php endif; ?>
+
         <form method="post">
             <button type="submit" class="demo-pay-button">Pay Now</button>
         </form>

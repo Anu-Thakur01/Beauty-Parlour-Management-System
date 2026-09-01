@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('include/dbconnection.php');
+include('include/payment-config.php');
 
 if (!isset($_SESSION['uid'])) {
     header('location:logout.php');
