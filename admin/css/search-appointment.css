@@ -56,9 +56,9 @@ body {
 .search-flex {
     position: relative;
     display: flex;
-    gap: 10px;
+    gap: 12px;
     align-items: center;
-    flex-wrap: wrap;
+    width: 100%;
 }
 
 .search-input {
@@ -72,6 +72,7 @@ body {
     outline: none;
     background: #fff;
     box-shadow: 0 2px 8px rgba(242, 153, 74, 0.08);
+    color: #202124;
 }
 
 .search-input:focus {
@@ -209,36 +210,40 @@ body {
 
 .search-suggestions {
     position: absolute;
-    top: calc(100% + 10px);
+    top: calc(100% + 2px);
     left: 0;
-    width: 100%;
+    width: calc(100% - 122px);
     z-index: 50;
     background: #fff;
-    border: 1px solid #e9d7c9;
-    border-radius: 14px;
-    box-shadow: 0 16px 30px rgba(14, 30, 37, 0.12);
-    max-height: 260px;
+    border: 1px solid rgba(32, 33, 36, 0.12);
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 3px 8px rgba(60, 64, 67, 0.12);
+    max-height: 280px;
     overflow-y: auto;
     overflow-x: hidden;
+    padding: 0;
 }
 
 .suggestion-item {
-    padding: 14px 18px;
-    border-bottom: 1px solid #f3ece7;
+    padding: 10px 16px;
     font-size: 17px;
     line-height: 1.35;
-    color: #2e2e2e;
+    color: #202124;
     cursor: pointer;
-    transition: all 0.2s ease;
-    background: linear-gradient(180deg, #ffffff 0%, #fffaf7 100%);
+    transition: background 0.12s ease;
+    background: transparent;
+    border: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.suggestion-item:hover {
+    background: #f8f9fa;
+    color: #202124;
 }
 
 .suggestion-item:last-child {
     border-bottom: none;
-}
-
-.suggestion-item:hover {
-    background: linear-gradient(90deg, #f6f3ff 0%, #eef5ff 100%);
-    color: #1b3fa8;
-    transform: translateX(2px);
 }

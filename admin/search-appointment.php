@@ -27,9 +27,10 @@ if (strlen($_SESSION['bpmsaid']) == 0) {
             <h3 class="card-title"><i class="fa fa-search"></i> Universal Search</h3>
             <div class="form-group">
                 <label class="search-label">Search by Name, Mobile, Appointment Number or User ID</label>
-                <div class="search-flex">
-                    <input type="text" name="searchdata" id="searchdata" class="search-input" placeholder="Search anything..." required="true">
+                <div class="search-flex" style="position: relative;">
+                    <input type="text" name="searchdata" id="searchdata" class="search-input" placeholder="Search anything..." required="true" autocomplete="off">
                     <button type="submit" name="search" class="search-btn">Search</button>
+                    <div id="appointment-suggestions" class="search-suggestions" style="display:none;"></div>
                     <?php if(isset($_POST['search'])): ?>
                         <a href="search-appointment.php" class="btn-clear">Clear</a>
                     <?php endif; ?>
@@ -118,6 +119,57 @@ if (strlen($_SESSION['bpmsaid']) == 0) {
 
 <?php include 'includes/footer.php'; ?>
 <script src="js/script.js"></script>
+<script>
+(function () {
+    const input = document.getElementById('searchdata');
+    const suggestionsBox = document.getElementById('appointment-suggestions');
+
+    if (!input || !suggestionsBox) return;
+
+    input.addEventListener('input', function () {
+        const q = this.value.trim();
+        if (q.length < 1) {
+            suggestionsBox.style.display = 'none';
+            suggestionsBox.innerHTML = '';
+            return;
+        }
+
+        fetch('search-suggestions.php?type=appointment&q=' + encodeURIComponent(q))
+            .then(response => response.json())
+            .then(data => {
+                if (!Array.isArray(data) || data.length === 0) {
+                    suggestionsBox.style.display = 'none';
+                    suggestionsBox.innerHTML = '';
+                    return;
+                }
+
+                suggestionsBox.innerHTML = data.map(item => {
+                    return '<div class="suggestion-item" data-value="' + item.value.replace(/"/g, '&quot;') + '">' + item.label + '</div>';
+                }).join('');
+
+                suggestionsBox.style.display = 'block';
+
+                suggestionsBox.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', function () {
+                        input.value = this.dataset.value;
+                        suggestionsBox.style.display = 'none';
+                        suggestionsBox.innerHTML = '';
+                    });
+                });
+            })
+            .catch(() => {
+                suggestionsBox.style.display = 'none';
+                suggestionsBox.innerHTML = '';
+            });
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('#searchdata') && !event.target.closest('#appointment-suggestions')) {
+            suggestionsBox.style.display = 'none';
+        }
+    });
+})();
+</script>
 </body>
 </html>
 <?php } ?>
