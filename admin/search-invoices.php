@@ -26,14 +26,16 @@ if (strlen($_SESSION['bpmsaid']) == 0) {
         <form method="post" name="search">
             <h3 class="panel-subtitle">Filter Billing Records</h3>
             <label class="label">Customer Name, Mobile No, or Invoice ID</label>
-            <div class="search-group">
+            <div class="search-group" style="position: relative;">
                 <div class="input-with-icon">
                     <i class="fa fa-terminal"></i>
-                    <input type="text" name="searchdata" id="searchdata" class="input" required="true" placeholder="Start typing to search...">
+                    <input type="text" name="searchdata" id="searchdata" class="input" required="true" placeholder="Start typing to search..." autocomplete="off">
                 </div>
                 <button type="submit" name="search" class="btn-search">
                     <i class="fa fa-search"></i> Search
                 </button>
+
+                <div id="invoice-suggestions" class="search-suggestions" style="display:none;"></div>
                 
                 <?php if(isset($_POST['search'])): ?>
                     <a href="search-invoices.php" class="btn-clear"><i class="fa fa-refresh"></i> Reset</a>
@@ -106,6 +108,57 @@ if (strlen($_SESSION['bpmsaid']) == 0) {
 
 <?php include 'includes/footer.php'; ?>
 <script src="js/script.js"></script>
+<script>
+(function () {
+    const input = document.getElementById('searchdata');
+    const suggestionsBox = document.getElementById('invoice-suggestions');
+
+    if (!input || !suggestionsBox) return;
+
+    input.addEventListener('input', function () {
+        const q = this.value.trim();
+        if (q.length < 1) {
+            suggestionsBox.style.display = 'none';
+            suggestionsBox.innerHTML = '';
+            return;
+        }
+
+        fetch('search-suggestions.php?type=invoice&q=' + encodeURIComponent(q))
+            .then(response => response.json())
+            .then(data => {
+                if (!Array.isArray(data) || data.length === 0) {
+                    suggestionsBox.style.display = 'none';
+                    suggestionsBox.innerHTML = '';
+                    return;
+                }
+
+                suggestionsBox.innerHTML = data.map(item => {
+                    return '<div class="suggestion-item" data-value="' + item.value.replace(/"/g, '&quot;') + '">' + item.label + '</div>';
+                }).join('');
+
+                suggestionsBox.style.display = 'block';
+
+                suggestionsBox.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', function () {
+                        input.value = this.dataset.value;
+                        suggestionsBox.style.display = 'none';
+                        suggestionsBox.innerHTML = '';
+                    });
+                });
+            })
+            .catch(() => {
+                suggestionsBox.style.display = 'none';
+                suggestionsBox.innerHTML = '';
+            });
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('#searchdata') && !event.target.closest('#invoice-suggestions')) {
+            suggestionsBox.style.display = 'none';
+        }
+    });
+})();
+</script>
 </body>
 </html>
 <?php } ?>
