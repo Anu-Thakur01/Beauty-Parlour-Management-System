@@ -40,6 +40,11 @@ function payment_provider_label($provider)
 
 function payment_sandbox_base_url()
 {
+    $configured = get_env_value('APP_BASE_URL', '');
+    if ($configured !== '') {
+        return rtrim($configured, '/');
+    }
+
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $basePath = dirname($_SERVER['PHP_SELF'] ?? '/');

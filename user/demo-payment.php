@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $payment['status'] === 'Pending') {
 
         $payload = [
             'return_url' => $callbackUrl,
-            'website_url' => 'http://localhost/parlour',
+            'website_url' => get_env_value('APP_BASE_URL', payment_sandbox_base_url()),
             'amount' => (int) round($amount * 100),
             'purchase_order_id' => $invid,
             'purchase_order_name' => 'Parlour Invoice ' . $invid,

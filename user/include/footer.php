@@ -1,5 +1,5 @@
 <?php 
-$con = mysqli_connect("localhost", "root", "", "pms_db");
+$con = parlour_db_connection();
 // Pulling contact info for the left column
 $res_contact = mysqli_query($con, "SELECT * FROM tblpages WHERE PageType='contactus'");
 $foot_contact = mysqli_fetch_array($res_contact);

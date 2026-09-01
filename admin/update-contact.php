@@ -2,7 +2,7 @@
 session_start();
 error_reporting(0);
 include('includes/dbconnection.php');
-$con = mysqli_connect("localhost", "root", "", "pms_db");
+$con = parlour_db_connection();
 
 $msg = "";
 if(isset($_POST['update'])) {
