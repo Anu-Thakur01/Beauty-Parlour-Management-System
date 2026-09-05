@@ -8,13 +8,15 @@ Import `database/add_payments.sql` after `database/pms_db.sql` if `tblpayments` 
 
 ## 2. Sandbox configuration
 
-Run `set-payment-env.bat` from a Command Prompt, then restart Apache. Replace the Khalti placeholder with the sandbox merchant secret key:
+Create a local `.env` file by copying `.env.example`, then replace the Khalti placeholder with the sandbox merchant secret key. The application loads this file for local XAMPP requests:
 
 ```bat
 setx KHALTI_SANDBOX_KEY "your_khalti_sandbox_secret_key"
 setx ESEWA_SANDBOX_MERCHANT_CODE "EPAYTEST"
 setx ESEWA_SANDBOX_MERCHANT_SECRET "your_esewa_sandbox_merchant_secret"
 ```
+
+You can also run `set-payment-env.bat` from a Command Prompt, but restart the XAMPP Control Panel and Apache afterward so the new process inherits the variables.
 
 The eSewa UAT merchant code is `EPAYTEST`. Obtain the eSewa sandbox secret from the provider's UAT documentation or merchant portal, and obtain the Khalti `live_secret_key` from the Khalti test merchant portal. Do not commit either secret or use a production key.
 

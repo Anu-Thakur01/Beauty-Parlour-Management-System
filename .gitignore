@@ -1,2 +1,3 @@
 # Local payment environment variables
 set-payment-env.bat
+.env
