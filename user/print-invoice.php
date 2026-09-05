@@ -2,6 +2,13 @@
 session_start();
 include('include/dbconnection.php');
 
+if (!isset($_SESSION['uid']) || ($_SESSION['role'] ?? '') !== 'user') {
+    header('location:logout.php');
+    exit;
+}
+
+$uid = (int) $_SESSION['uid'];
+
 if(isset($_GET['invoiceid']) && !empty($_GET['invoiceid'])) {
     $invid = mysqli_real_escape_string($con, $_GET['invoiceid']);
 } else {
@@ -11,8 +18,15 @@ if(isset($_GET['invoiceid']) && !empty($_GET['invoiceid'])) {
 $ret = mysqli_query($con, "SELECT DISTINCT tblusers.FullName, tblusers.MobileNumber, tblinvoice.PostingDate 
                             FROM tblusers 
                             JOIN tblinvoice ON tblusers.id = tblinvoice.Userid 
-                            WHERE tblinvoice.BillingId='$invid' LIMIT 1");
+                            WHERE tblinvoice.BillingId='$invid' AND tblinvoice.Userid=$uid LIMIT 1");
 $user = mysqli_fetch_array($ret);
+
+$paymentResult = mysqli_query($con, "SELECT status FROM tblpayments WHERE UserID=$uid AND BillingId='$invid' LIMIT 1");
+$payment = $paymentResult ? mysqli_fetch_assoc($paymentResult) : null;
+if (!$user || !$payment || $payment['status'] !== 'Completed') {
+    echo "Paid receipt is available only after payment is completed.";
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -55,22 +69,46 @@ $user = mysqli_fetch_array($ret);
 
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
+        :root { --ink: #25313b; --muted: #6d7882; --accent: #d9654d; --accent-soft: #fff3ee; --line: #e4e8eb; }
+        * { box-sizing: border-box; }
+        body { background: #f3f5f6; color: var(--ink); }
+        .invoice-box { max-width: 820px; padding: 42px 48px; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(37,49,59,.08); }
+        .header-section { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 32px; padding-bottom: 22px; border-bottom: 3px solid var(--accent); }
+        .brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-bottom: 12px; background: var(--accent); color: #fff; font-size: 21px; font-weight: 700; }
+        .header-section h1 { margin: 0 0 5px; color: var(--ink); font-size: 24px; letter-spacing: 1px; }
+        .header-section p { margin: 0; color: var(--muted); font-size: 13px; }
+        .receipt-label { padding: 8px 12px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .info-grid { gap: 32px; margin-bottom: 30px; }
+        .info-left, .info-right { line-height: 1.8; }
+        .info-title { display: block; margin-bottom: 5px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        th, td { padding: 14px 12px; border-color: var(--line); }
+        th { background: #f7f8f9; color: var(--muted); font-size: 11px; letter-spacing: .7px; text-transform: uppercase; }
+        .total-row { background: var(--accent-soft); color: var(--accent); }
+        .footer-note { margin-top: 38px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); }
+        .print-button { margin-top: 14px; padding: 9px 16px; border: 0; background: var(--accent); color: #fff; cursor: pointer; font-size: 12px; }
+        @media (max-width: 600px) { body { padding: 10px; } .invoice-box { padding: 28px 22px; } .header-section, .info-grid { display: block; } .receipt-label { display: inline-block; margin-top: 18px; } .info-left, .info-right { width: 100%; text-align: left; } .info-right { margin-top: 18px; } }
     </style>
 </head>
 <body onload="window.print()">
 
 <div class="invoice-box">
     <div class="header-section">
-        <h1>ANUA BEAUTY PARLOUR</h1>
-        <p>Official Service Receipt</p>
+        <div>
+            <span class="brand-mark">A</span>
+            <h1>ANUA BEAUTY PARLOUR</h1>
+            <p>Official service receipt</p>
+        </div>
+        <span class="receipt-label">Paid</span>
     </div>
 
     <div class="info-grid">
         <div class="info-left">
+            <span class="info-title">Customer details</span>
             <strong>Customer:</strong> <?php echo $user['FullName']; ?><br>
             <strong>Contact:</strong> <?php echo $user['MobileNumber']; ?>
         </div>
         <div class="info-right">
+            <span class="info-title">Receipt details</span>
             <strong>Invoice No:</strong> #<?php echo $invid; ?><br>
             <strong>Date:</strong> <?php echo date("d-M-Y", strtotime($user['PostingDate'])); ?>
         </div>
@@ -105,7 +143,7 @@ $user = mysqli_fetch_array($ret);
 
     <div class="footer-note">
         <p>Thank you for choosing Anua Beauty Parlour!</p>
-        <button class="no-print" onclick="window.print()" style="padding:8px 15px; background:#e76f51; color:white; border:none; border-radius:4px; cursor:pointer;">Print Again</button>
+        <button class="no-print print-button" onclick="window.print()">Print Again</button>
     </div>
 </div>
 

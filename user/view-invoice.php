@@ -35,13 +35,13 @@ $payment = $paymentResult ? mysqli_fetch_assoc($paymentResult) : null;
 $paymentLabel = 'Awaiting payment';
 $paymentColor = '#b7791f';
 if ($payment && $payment['status'] === 'Completed') {
-    $paymentLabel = 'Paid';
+    $paymentLabel = 'Paid Invoice';
     $paymentColor = 'green';
 } elseif ($payment && $payment['provider'] === 'cash') {
-    $paymentLabel = 'Pay at Parlour';
+    $paymentLabel = 'Cash selected - awaiting confirmation';
     $paymentColor = '#b7791f';
 } elseif ($payment && $payment['status'] === 'Pending') {
-    $paymentLabel = 'Payment pending';
+    $paymentLabel = 'Invoice unpaid - payment pending';
 }
 ?>
 <!DOCTYPE html>
@@ -121,7 +121,7 @@ if ($payment && $payment['status'] === 'Completed') {
 <div class="invoice-wrapper">
     <div class="invoice-header">
         <div>
-            <h2 class="invoice-title">Service Invoice</h2>
+            <h2 class="invoice-title"><?php echo ($payment && $payment['status'] === 'Completed') ? 'Paid Invoice / Receipt' : 'Invoice - Payment Due'; ?></h2>
             <p style="color: #888;">#<?php echo $invid; ?></p>
         </div>
     </div>
@@ -173,6 +173,8 @@ if ($payment && $payment['status'] === 'Completed') {
     <div style="margin-top: 40px; text-align: center;">
         <?php if (!$payment || $payment['status'] !== 'Completed'): ?>
         <a href="payment.php?invoiceid=<?php echo urlencode($invid); ?>" class="btn-print" style="margin-right: 12px; background: #2a9d8f;">Choose Payment Method</a>
+        <?php else: ?>
+        <a href="print-invoice.php?invoiceid=<?php echo urlencode($invid); ?>" class="btn-print" style="margin-right: 12px;">Print Paid Receipt</a>
         <?php endif; ?>
         <a href="invoice.php" style="color: #d4a373; text-decoration: none;">
             <i class="fas fa-arrow-left"></i> Back to History

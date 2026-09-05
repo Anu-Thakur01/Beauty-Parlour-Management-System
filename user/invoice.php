@@ -46,14 +46,18 @@ if (!isset($_SESSION['uid'])) {
                         <th>Customer Name</th>
                         <th>Mobile Number</th>
                         <th>Invoice Date</th>
+                        <th>Payment Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php
-                $ret = mysqli_query($con, "SELECT tblusers.FullName, tblusers.MobileNumber, tblinvoice.BillingId, tblinvoice.PostingDate 
+                $ret = mysqli_query($con, "SELECT tblusers.FullName, tblusers.MobileNumber, tblinvoice.BillingId, tblinvoice.PostingDate,
+                                                  tblpayments.provider, tblpayments.status
                                            FROM tblinvoice 
                                            JOIN tblusers ON tblusers.id = tblinvoice.Userid 
+                                           LEFT JOIN tblpayments ON tblpayments.UserID = tblinvoice.Userid
+                                               AND tblpayments.BillingId = tblinvoice.BillingId
                                            WHERE tblinvoice.Userid='$uid' 
                                            GROUP BY tblinvoice.BillingId 
                                            ORDER BY tblinvoice.PostingDate DESC");
@@ -69,6 +73,18 @@ if (!isset($_SESSION['uid'])) {
                         <td><?php echo $row['MobileNumber']; ?></td>
                         <td><?php echo date("d-M-Y", strtotime($row['PostingDate'])); ?></td>
                         <td>
+                            <?php if ($row['status'] === 'Completed'): ?>
+                                <strong style="color:green;">Paid</strong>
+                            <?php elseif ($row['provider'] === 'cash' && $row['status'] === 'Pending'): ?>
+                                <strong style="color:#b7791f;">Cash selected</strong><br>
+                                <small>Awaiting confirmation</small>
+                            <?php elseif ($row['status'] === 'Pending'): ?>
+                                <strong style="color:#b7791f;">Unpaid</strong>
+                            <?php else: ?>
+                                Awaiting payment
+                            <?php endif; ?>
+                        </td>
+                        <td>
                             <a href="view-invoice.php?invoiceid=<?php echo $row['BillingId']; ?>" 
                                style="background: #2a9d8f; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-size: 13px;">
                                View Details
@@ -80,7 +96,7 @@ if (!isset($_SESSION['uid'])) {
                     } 
                 } else { ?>
                     <tr>
-                        <td colspan="6" class="no-record">No Record Found</td>
+                        <td colspan="7" class="no-record">No Record Found</td>
                     </tr>
                 <?php } ?>
                 </tbody>
