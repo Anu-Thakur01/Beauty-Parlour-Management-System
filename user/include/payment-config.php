@@ -3,7 +3,7 @@
 function get_env_value($key, $default = '')
 {
     $value = getenv($key);
-    if ($value === false || $value === null || trim((string) $value) === '') {
+    if ($value === false || $value === null || trim((string) $value) === '' || strpos((string) $value, 'your_') === 0) {
         return $default;
     }
 
@@ -13,6 +13,9 @@ function get_env_value($key, $default = '')
 const KHALTI_SANDBOX_KEY = 'KHALTI_SANDBOX_KEY';
 const ESEWA_SANDBOX_MERCHANT_CODE = 'ESEWA_SANDBOX_MERCHANT_CODE';
 const ESEWA_SANDBOX_MERCHANT_SECRET = 'ESEWA_SANDBOX_MERCHANT_SECRET';
+const KHALTI_SANDBOX_API = 'https://dev.khalti.com/api/v2';
+const ESEWA_SANDBOX_FORM = 'https://rc-epay.esewa.com.np/api/epay/main/v2/form';
+const ESEWA_SANDBOX_STATUS_API = 'https://uat.esewa.com.np/api/epay/transaction/status/';
 
 function payment_key_is_configured($provider)
 {
@@ -56,5 +59,61 @@ function payment_sandbox_base_url()
 function payment_gateway_callback_url($provider, $invid)
 {
     $base = payment_sandbox_base_url();
-    return $base . '/payment-callback.php?method=' . urlencode($provider) . '&invoiceid=' . urlencode($invid);
+    $path = $provider === 'khalti' ? '/khalti-callback.php' : '/esewa-callback.php';
+    return $base . $path . '?invoiceid=' . urlencode($invid);
+}
+
+function payment_request_json($url, array $payload, array $headers = [])
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_HTTPHEADER => array_merge(['Content-Type: application/json'], $headers),
+        CURLOPT_TIMEOUT => 30,
+    ]);
+    $response = curl_exec($ch);
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    return [
+        'http_code' => $httpCode,
+        'error' => $error,
+        'data' => json_decode((string) $response, true),
+    ];
+}
+
+function payment_request_form($url, array $fields)
+{
+    $ch = curl_init($url . '?' . http_build_query($fields));
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 30,
+    ]);
+    $response = curl_exec($ch);
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    return [
+        'http_code' => $httpCode,
+        'error' => $error,
+        'data' => json_decode((string) $response, true),
+    ];
+}
+
+function esewa_signature(array $response, $secret)
+{
+    $names = explode(',', (string) ($response['signed_field_names'] ?? ''));
+    $parts = [];
+    foreach ($names as $name) {
+        if ($name === '' || !array_key_exists($name, $response)) {
+            return '';
+        }
+        $parts[] = $name . '=' . $response[$name];
+    }
+
+    return base64_encode(hash_hmac('sha256', implode(',', $parts), $secret, true));
 }

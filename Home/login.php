@@ -41,15 +41,17 @@ if (isset($_POST['login'])) {
             }
         }
             session_regenerate_id();
-            $_SESSION['bpmsaid'] = $row['id']; 
-            $_SESSION['uid'] = $row['id'];
             $_SESSION['role'] = $row['role']; 
             $_SESSION['fullname'] = $row['FullName'];
 
             if ($_SESSION['role'] === 'admin') {
+                $_SESSION['bpmsaid'] = $row['id'];
+                unset($_SESSION['uid']);
                 header("Location: ../admin/dashboard.php");
                 exit();
             } else {
+                $_SESSION['uid'] = $row['id'];
+                unset($_SESSION['bpmsaid']);
                 if (isset($_GET['redirect']) && $_GET['redirect'] == 'appointment') {
                     header("Location: ../user/get-appointment.php");
                 } else {

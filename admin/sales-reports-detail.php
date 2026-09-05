@@ -21,24 +21,22 @@ if ($type == 'year') {
     $subtitle = "Sales Report Year Wise";
     $table_header = "Year";
 
-    $query = "SELECT YEAR(t1.PostingDate) as label, SUM(t2.cost) as total_sales 
-              FROM tblinvoice t1
-              JOIN services t2 ON t1.ServiceId = t2.id
-              WHERE DATE(t1.PostingDate) BETWEEN '$from' AND '$to'
-              GROUP BY YEAR(t1.PostingDate)
-              ORDER BY YEAR(t1.PostingDate) ASC";
+    $query = "SELECT YEAR(paid_at) as label, SUM(amount) as total_sales
+              FROM tblpayments
+              WHERE status = 'Completed' AND DATE(paid_at) BETWEEN '$from' AND '$to'
+              GROUP BY YEAR(paid_at)
+              ORDER BY YEAR(paid_at) ASC";
 } else {
     $from_display = date("F-Y", strtotime($from));
     $to_display = date("F-Y", strtotime($to));
     $subtitle = "Sales Report Month Wise";
     $table_header = "Month / Year";
 
-    $query = "SELECT DATE_FORMAT(t1.PostingDate, '%M / %Y') as label, SUM(t2.cost) as total_sales 
-              FROM tblinvoice t1
-              JOIN services t2 ON t1.ServiceId = t2.id
-              WHERE DATE(t1.PostingDate) BETWEEN '$from' AND '$to'
-              GROUP BY MONTH(t1.PostingDate), YEAR(t1.PostingDate)
-              ORDER BY YEAR(t1.PostingDate) ASC, MONTH(t1.PostingDate) ASC";
+    $query = "SELECT DATE_FORMAT(paid_at, '%M / %Y') as label, SUM(amount) as total_sales
+              FROM tblpayments
+              WHERE status = 'Completed' AND DATE(paid_at) BETWEEN '$from' AND '$to'
+              GROUP BY MONTH(paid_at), YEAR(paid_at)
+              ORDER BY YEAR(paid_at) ASC, MONTH(paid_at) ASC";
 }
 
 $result = mysqli_query($con, $query);

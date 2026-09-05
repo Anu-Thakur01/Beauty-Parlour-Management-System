@@ -6,13 +6,13 @@ ini_set('display_errors', 1);
 // Include database connection (crucial for fetching the appointment time)
 include('include/dbconnection.php');
 
-if (!isset($_SESSION['bpmsaid']) || strlen($_SESSION['bpmsaid']) == 0) {
+if (!isset($_SESSION['uid']) || strlen($_SESSION['uid']) == 0 || ($_SESSION['role'] ?? '') !== 'user') {
     header('location:../index.php'); 
     exit();
 }
 
 $fullname = $_SESSION['fullname'];
-$uid = (int) $_SESSION['bpmsaid'];
+$uid = (int) $_SESSION['uid'];
 
 // Recommend services from the logged-in user's accepted booking history.
 $personalizedServices = mysqli_query($con, "SELECT s.*, COUNT(a.ID) AS booking_count

@@ -13,9 +13,9 @@ if (!isset($_SESSION['bpmsaid']) || strlen($_SESSION['bpmsaid']) == 0) {
     $totalrejectedapt = mysqli_num_rows(mysqli_query($con, "SELECT ID FROM tblappointment WHERE Status='Rejected'"));
     $totalservices = mysqli_num_rows(mysqli_query($con, "SELECT ID FROM services"));
 
-    $query_sales = mysqli_query($con, "SELECT SUM(services.cost) as total_revenue 
-                                       FROM tblinvoice 
-                                       JOIN services ON tblinvoice.ServiceId = services.ID");
+    $query_sales = mysqli_query($con, "SELECT COALESCE(SUM(tblpayments.amount), 0) as total_revenue
+                       FROM tblpayments
+                       WHERE tblpayments.status = 'Completed'");
     $row_sales = mysqli_fetch_array($query_sales);
     $total_sales = $row_sales['total_revenue'] ?? 0;
 ?>

@@ -19,6 +19,8 @@ $initial = strtoupper(substr($fullName, 0, 1));
 // Notification Badge Logic
 $ret = mysqli_query($con, "SELECT ID FROM tblappointment WHERE Status='Pending' OR Status='' OR Status='0'");
 $new_count = mysqli_num_rows($ret);
+$cash_ret = mysqli_query($con, "SELECT id FROM tblpayments WHERE provider='cash' AND status='Pending'");
+$cash_count = mysqli_num_rows($cash_ret);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -73,6 +75,14 @@ $new_count = mysqli_num_rows($ret);
         <i class="fa-solid fa-bell"></i>
         <?php if($new_count > 0): ?>
           <span class="notification-badge"><?php echo $new_count; ?></span>
+        <?php endif; ?>
+      </a>
+    </div>
+    <div class="bell">
+      <a href="invoices.php" style="position: relative; text-decoration: none;" title="Cash payments awaiting confirmation">
+        <i class="fa-solid fa-money-bill-wave"></i>
+        <?php if($cash_count > 0): ?>
+          <span class="notification-badge"><?php echo $cash_count; ?></span>
         <?php endif; ?>
       </a>
     </div>

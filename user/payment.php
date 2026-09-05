@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         mysqli_stmt_close($save);
     } elseif ($method === 'esewa' || $method === 'khalti') {
-        $reference = 'DEMO-' . strtoupper($method) . '-' . $uid . '-' . $invid;
+        $reference = 'PAY-' . strtoupper($method) . '-' . $uid . '-' . $invid;
         $total = (float) $invoice['total'];
         $save = mysqli_prepare($con, "INSERT INTO tblpayments (UserID, BillingId, amount, provider, payment_reference, status)
             VALUES (?, ?, ?, ?, ?, 'Pending')
@@ -55,11 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (mysqli_stmt_execute($save)) {
             mysqli_stmt_close($save);
-            header('location:demo-payment.php?invoiceid=' . urlencode($invid) . '&method=' . urlencode($method));
+            header('location:' . $method . '-payment.php?invoiceid=' . urlencode($invid));
             exit;
         }
         mysqli_stmt_close($save);
-        $message = 'We could not start the demo payment. Please try again.';
+        $message = 'We could not start the sandbox payment. Please try again.';
     } else {
         $message = 'Please select a valid payment method.';
     }
@@ -104,12 +104,12 @@ $payment = $paymentResult ? mysqli_fetch_assoc($paymentResult) : null;
                 <button type="submit" name="payment_method" value="esewa" class="payment-option online-option esewa-option<?php echo ($payment && $payment['provider'] === 'esewa') ? ' is-selected' : ''; ?>">
                     <span class="payment-icon payment-brand"><img src="images/payment/esewa-icon.png" alt="eSewa"></span>
                     <span class="payment-option-title">eSewa Mobile Wallet</span>
-                    <span class="payment-option-subtitle">Digital Wallet</span>
+                    <span class="payment-option-subtitle">Sandbox payment</span>
                 </button>
                 <button type="submit" name="payment_method" value="khalti" class="payment-option online-option khalti-option<?php echo ($payment && $payment['provider'] === 'khalti') ? ' is-selected' : ''; ?>">
                     <span class="payment-icon khalti-brand" aria-label="Khalti"><span class="khalti-mark">K</span><span class="khalti-name">khalti</span></span>
                     <span class="payment-option-title">Khalti by IME</span>
-                    <span class="payment-option-subtitle">Digital Wallet</span>
+                    <span class="payment-option-subtitle">Sandbox payment</span>
                 </button>
             </form>
         <?php endif; ?>

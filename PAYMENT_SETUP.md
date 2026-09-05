@@ -1,58 +1,38 @@
 # Sandbox Payment Setup for XAMPP
 
-This project supports sandbox testing for Khalti and eSewa without using a real merchant account or real money.
+The Khalti and eSewa options use the providers' official test systems. No live endpoint or real customer money is used. The application sends the payment request, redirects to the provider's sandbox page, receives the callback, verifies it with the provider API, and only then marks `tblpayments.status` as `Completed`.
 
-## 1) Set your sandbox keys
+## 1. Database
 
-Use the template in [.env.example](.env.example) as a reference.
+Import `database/add_payments.sql` after `database/pms_db.sql` if `tblpayments` does not already exist.
 
-For local XAMPP development, the easiest method is to add the variables in your Windows environment before starting Apache:
+## 2. Sandbox configuration
 
-1. Open System Properties > Environment Variables
-2. Add these variables:
-   - `KHALTI_SANDBOX_KEY`
-   - `ESEWA_SANDBOX_MERCHANT_CODE`
-   - `ESEWA_SANDBOX_MERCHANT_SECRET`
-3. Restart your terminal and Apache
-
-Example:
+Run `set-payment-env.bat` from a Command Prompt, then restart Apache. Replace the Khalti placeholder with the sandbox merchant secret key:
 
 ```bat
-set KHALTI_SANDBOX_KEY=your_khalti_sandbox_key_here
-set ESEWA_SANDBOX_MERCHANT_CODE=EPAYTEST
-set ESEWA_SANDBOX_MERCHANT_SECRET=your_esewa_sandbox_secret_here
+setx KHALTI_SANDBOX_KEY "your_khalti_sandbox_secret_key"
+setx ESEWA_SANDBOX_MERCHANT_CODE "EPAYTEST"
+setx ESEWA_SANDBOX_MERCHANT_SECRET "your_esewa_sandbox_merchant_secret"
 ```
 
-## 2) Start your app
+The eSewa UAT merchant code is `EPAYTEST`. Obtain the eSewa sandbox secret from the provider's UAT documentation or merchant portal, and obtain the Khalti `live_secret_key` from the Khalti test merchant portal. Do not commit either secret or use a production key.
 
-Open your local project in XAMPP and run the app normally through `http://localhost/parlour`.
+The callback URL is built from `APP_BASE_URL` when it is set. For local XAMPP, `http://localhost/parlour/user` is normally sufficient because the provider redirects the browser. If the provider cannot reach the local callback in your setup, expose the site through an HTTPS tunnel and set `APP_BASE_URL` to that HTTPS URL.
 
-## 3) Test the payment flow
+## 3. Test credentials
 
-1. Log in as a user
-2. Open an invoice
-3. Click Pay
-4. Choose Khalti or eSewa
-5. Press Pay Now
-6. The app will redirect to the provider sandbox flow
-7. After the sandbox callback, payment status updates in the invoice automatically
+Khalti sandbox documentation lists test Khalti IDs `9800000000` through `9800000005`, MPIN `1111`, and OTP `987654`.
 
-## 4) Important notes
+eSewa UAT documentation lists eSewa IDs `9806800001` through `9806800005`, password `Nepal@123`, MPIN `1122`, and token `123456`.
 
-- Do not store real production secrets in the project files
-- Keep the values in environment variables or a local `.env` file outside source control
-- The app falls back to a safe mocked-success flow only when no sandbox credentials are configured
+## 4. Test the flow
 
-## 5) What happens in the app
+1. Start Apache and MySQL in XAMPP and open `http://localhost/parlour`.
+2. Log in as a user and open an invoice.
+3. Choose Khalti or eSewa.
+4. Complete the payment on the provider's test page with the credentials above.
+5. The callback verifies the transaction through the sandbox API and redirects to the invoice.
+6. Confirm the invoice is marked paid only after verification.
 
-The payment flow already matches your existing database structure:
-
-- `tblpayments.UserID`
-- `tblpayments.BillingId`
-- `tblpayments.amount`
-- `tblpayments.provider`
-- `tblpayments.payment_reference`
-- `tblpayments.gateway_transaction_id`
-- `tblpayments.status`
-
-The user simply selects the invoice and method, then the app handles the gateway flow and updates the invoice status automatically.
+Khalti uses `user/khalti-payment.php` and `user/khalti-callback.php`. eSewa uses `user/esewa-payment.php` and `user/esewa-callback.php`. API keys are read from environment variables in `user/include/payment-config.php`; they are not stored in the database or committed in the application code.

@@ -33,6 +33,7 @@ if (strlen($_SESSION['bpmsaid'] == 0)) {
                     <th>Invoice ID</th>
                     <th>Customer Name</th>
                     <th>Invoice Date</th>
+                    <th>Payment Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -42,9 +43,13 @@ if (strlen($_SESSION['bpmsaid'] == 0)) {
             $ret = mysqli_query($con, "SELECT 
                                         tblusers.FullName, 
                                         tblinvoice.BillingId, 
-                                        tblinvoice.PostingDate 
+                                        tblinvoice.PostingDate,
+                                        tblpayments.provider,
+                                        tblpayments.status
                                        FROM tblinvoice 
-                                       JOIN tblusers ON tblusers.id = tblinvoice.Userid 
+                                       JOIN tblusers ON tblusers.id = tblinvoice.Userid
+                                       LEFT JOIN tblpayments ON tblpayments.UserID = tblinvoice.Userid
+                                           AND tblpayments.BillingId = tblinvoice.BillingId
                                        GROUP BY tblinvoice.BillingId 
                                        ORDER BY tblinvoice.PostingDate DESC");
             
@@ -57,6 +62,18 @@ if (strlen($_SESSION['bpmsaid'] == 0)) {
                     <td>#<?php echo $row['BillingId']; ?></td>
                     <td><?php echo $row['FullName']; ?></td>
                     <td><?php echo date("d-M-Y H:i", strtotime($row['PostingDate'])); ?></td>
+                    <td>
+                        <?php if ($row['provider'] === 'cash' && $row['status'] === 'Pending'): ?>
+                            <strong style="color:#b7791f;">Cash Selected</strong><br>
+                            <small>Awaiting confirmation</small>
+                        <?php elseif ($row['status'] === 'Completed'): ?>
+                            <strong style="color:#207a42;">Paid</strong>
+                        <?php elseif ($row['status'] === 'Pending'): ?>
+                            <strong style="color:#b7791f;">Payment Pending</strong>
+                        <?php else: ?>
+                            Awaiting Payment
+                        <?php endif; ?>
+                    </td>
                     <td class="action-buttons">
                         <a href="view-invoice.php?invoiceid=<?php echo $row['BillingId']; ?>" class="view-btn">
                             View Details
@@ -68,7 +85,7 @@ if (strlen($_SESSION['bpmsaid'] == 0)) {
                 } 
             } else { ?>
                 <tr>
-                    <td colspan="5" class="no-data">No invoices found in the system.</td>
+                    <td colspan="6" class="no-data">No invoices found in the system.</td>
                 </tr>
             <?php } ?>
             </tbody>
